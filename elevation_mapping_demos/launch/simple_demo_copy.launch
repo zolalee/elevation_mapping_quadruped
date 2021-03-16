@@ -1,0 +1,46 @@
+<launch>
+
+  <!-- Elevation mapping node -->
+  <node pkg="elevation_mapping" type="elevation_mapping" name="elevation_mapping" output="screen">
+    <rosparam command="load" file="$(find elevation_mapping_demos)/config/robots/waffle_robot_copy.yaml" />
+    <rosparam command="load" file="$(find elevation_mapping_demos)/config/elevation_maps/simple_demo_map.yaml" />
+    <rosparam command="load" file="$(find elevation_mapping)/config/sensor_processors/kinect_nguyen_et_al.yaml" />
+    <rosparam command="load" file="$(find elevation_mapping_demos)/config/postprocessing/postprocessor_pipeline.yaml" />
+  </node>
+  <!-- Spawn turtlebot into gazebo based on robot_description. -->
+      <node pkg="gazebo_ros" type="spawn_model" name="urdf_spawner" respawn="false" output="screen"
+          args="-urdf -z 0.4 -model yobotics_gazebo -param robot_description -unpause "/>
+  <!-- Launch visualizations for the resulting elevation map -->
+  <!-- <include file="$(find elevation_mapping_demos)/launch/visualization.launch" /> -->
+  <arg name="x_pos" default="-3.0"/>
+  <arg name="y_pos" default="1.0"/>
+  <arg name="z_pos" default="0.0"/>
+    <arg name="description_name"           default="robot_description"/>
+    <arg name="description_file"           default="$(find yobotics_description)/xacro/robot_with_kinect.xacro"/>
+    <arg name="user_debug"           default="false"/>
+    <!-- <arg name="user_debug" default="TRUE"/>
+    <param name="robot_description" textfile="$(find cheetah_description)/xacro/mini_cheetah.urdf" />
+    <param name="use_gui" value="TRUE"/> -->
+  <!-- Start gazebo server with turtlebot3_house scene. -->
+  <include file="$(find gazebo_ros)/launch/empty_world.launch">
+    <arg name="world_name"    value="$(find turtlebot3_gazebo)/worlds/turtlebot3_house.world"/>
+    <arg name="paused"        value="false"/>
+    <arg name="use_sim_time"  value="false"/>
+    <arg name="gui"           value="false"/>
+    <arg name="headless"      value="false"/>
+    <arg name="debug"         value="false"/>
+  </include>
+  <!-- Launch RViz with the demo configuration -->
+
+      <param name="robot_description" command="$(find xacro)/xacro --inorder '$(find yobotics_description)/urdf/yobotics.urdf' " />
+          <node name="yobotics_robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" respawn="false" output="screen">
+        <param name="publish_frequency" type="double" value="30.0" />
+        <param name="ignore_timestamp" type="bool" value="true" />
+    </node>  
+  <node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher">
+    <param name="/use_gui" value="false"/>
+        <rosparam param="/source_list">[yobotics/joint_states]</rosparam>
+    </node>
+  <!-- <node name="rviz" pkg="rviz" type="rviz" args="-d $(find elevation_mapping_demos)/rviz/elevation_map_visualization.rviz" /> -->
+<node name="rviz" pkg="rviz" type="rviz" args="-d $(find elevation_mapping_demos)/rviz/turtlebot3_waffle_demo_copy.rviz" />
+</launch>
